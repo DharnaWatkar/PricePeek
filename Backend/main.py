@@ -1,9 +1,12 @@
+import os
 import time
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import fetcher
@@ -21,7 +24,8 @@ app.add_middleware(
 
 CACHE_TTL = 600  # seconds
 _cache: dict[str, tuple[float, dict]] = {}
-_pool = ThreadPoolExecutor(max_workers=4)
+# Scraping runs full Chromium instances; cap concurrency on small hosts
+_pool = ThreadPoolExecutor(max_workers=int(os.environ.get("MAX_WORKERS", "4")))
 
 
 class SearchResponse(BaseModel):
@@ -279,3 +283,16 @@ def setup(store: str, q: str = "toothpaste"):
         raise HTTPException(503, f"{store} setup didn't complete: {result['status']}")
     _cache.clear()   # refresh cached results now that cookies exist
     return {"status": "ok", "store": store}
+
+
+# ---- Serve the built frontend when deployed as a single service --------------
+# Render/Docker sets WEB_DIST; local dev falls back to ../Frontend/dist when
+# it exists. Registered last so /api/* and /health keep priority.
+_web_dist = None
+for _p in (os.environ.get("WEB_DIST"),
+           str(Path(__file__).resolve().parent.parent / "Frontend" / "dist")):
+    if _p and (Path(_p) / "index.html").exists():
+        _web_dist = Path(_p)
+        break
+if _web_dist:
+    app.mount("/", StaticFiles(directory=str(_web_dist), html=True), name="web")

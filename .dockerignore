@@ -1,0 +1,10 @@
+# never ship local state or secrets into a build context
+.git/
+Backend/.env
+Backend/profiles/
+Backend/uploads/
+Backend/_*.json
+Backend/venv/
+**/__pycache__/
+Frontend/node_modules/
+Frontend/dist/

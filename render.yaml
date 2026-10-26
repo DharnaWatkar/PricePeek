@@ -1,0 +1,15 @@
+# Render.com blueprint - single service: FastAPI serves the built React app.
+# Deploy button: https://render.com/deploy?repo=https://github.com/DharnaWatkar/PricePeek
+services:
+  - type: web
+    name: pricepeek
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false        # you'll be asked to paste it during blueprint setup
+      - key: MAX_WORKERS
+        value: "2"         # keep Chromium memory within free-tier limits
