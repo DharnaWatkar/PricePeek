@@ -1,0 +1,11 @@
+# secrets & local state
+Backend/.env
+Backend/profiles/
+Backend/_*
+Backend/uploads/
+
+__pycache__/
+venv/
+
+node_modules/
+dist/
